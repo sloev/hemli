@@ -1,0 +1,32 @@
+version: '3'
+services:
+  postgres:
+    image: "postgres" # use latest official postgres version
+    environment:
+      - "POSTGRES_USER=user"
+      - "POSTGRES_PASSWORD=password"
+      - "POSTGRES_DB=hemli"
+    ports:
+      - 5432:5432
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U user -d hemli"]
+      timeout: 1s
+      retries: 20
+
+  api:
+    build:
+      context: ../web
+      dockerfile: Dockerfile
+    healthcheck:
+      test: ["CMD", "curl", "--silent", "--show-error", "--fail", "http://localhost:80/health-check"]
+      timeout: 1s
+      retries: 20
+    environment:
+      - "POSTGRES_DSN=postgres://user:password@postgres:5432/hemli"
+      - "SECRET_KEY=secret"
+    ports:
+      - 80:9999
+    depends_on:
+      postgres:
+        condition: service_healthy
+

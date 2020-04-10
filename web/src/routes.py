@@ -11,23 +11,29 @@ import binascii
 authenticated_router = APIRouter()
 public_router = APIRouter()
 
+@public_router.get("/health-check")
+def healthcheck():
+    return {"message": 'ok'}
+
+
 @public_router.get("/issue-key")
 async def issue_key():
     id = auth.create_id()
     apikey = auth.create_token(id)
-    return {"id": id, 'apikey': apikey}
+    return {"id": id, "apikey": apikey}
 
 
 @public_router.get("/{id}/latest")
 async def latest(id: str):
     data = await db.get_latest(id)
-    return {'data': data}
+    return {"data": data}
+
 
 @public_router.get("/{id}/stream")
 async def latest(id: str):
     async def gen():
         async for data in db.get_stream(id):
-            yield json.dumps({'data':data}) + '\n'
+            yield json.dumps({"data": data}) + "\n"
             await asyncio.sleep(3)
 
     headers = {
